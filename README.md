@@ -25,7 +25,7 @@ Each point above comes in two alternative, yielding 16 variants of the distribut
 
 ## Further research in phase 2
 
-- Define a footprint for variants (based on XP above with network, memory, machine code)
+- Define a footprint for variants (based on XP above with network, memory, machine code). Maybe not a good idea, as it could give clues to attackants. Still, we need a way to know that e.g. Gateway is talking MQTT/Binary, so that we do not endup trying to listen with WS/String...
 - Define an entropy metric
 - Automate the generation of variants
-- How to ensure interoperability, correctness, etc in presence of high entropy? Or, put it simple, how do we keep control over this apparent mess? E.g. how to generate the backend part, based on the footprint of the gateway?
+- How to ensure interoperability, correctness, etc in presence of high entropy? Or, put it simple, how do we keep control over this apparent mess? E.g. how to generate a proper backend part, based on the footprint of the gateway?
