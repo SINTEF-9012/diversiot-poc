@@ -1,0 +1,3 @@
+
+datatype Byte<1> @type_checker "Integer"
+	@c_type "uint8_t"	@java_type "byte";

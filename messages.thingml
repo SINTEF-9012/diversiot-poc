@@ -1,0 +1,9 @@
+import "datatypes.thingml"
+
+thing fragment MedicalMsgs {
+	message Request(Num : Byte)
+		@code "1"
+		
+	message Response(Num : Byte)
+		@code "2"
+}
