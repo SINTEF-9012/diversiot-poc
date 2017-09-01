@@ -2,8 +2,17 @@ import "datatypes.thingml"
 
 thing fragment MedicalMsgs {
 	message Request(Num : Byte)
+	//DIVERSIFICATION 1 "Request code"
 		@code "1"
+	//DIVERSIFICATION @code "10"
+	
+	//DIVERSIFICATION 1 "Request test"
+		// Hello
+	//DIVERSIFICATION // Jakob
+
 		
 	message Response(Num : Byte)
+	//DIVERSIFICATION 2 "Response code"
 		@code "2"
+	//DIVERSIFICATION @code "17"
 }

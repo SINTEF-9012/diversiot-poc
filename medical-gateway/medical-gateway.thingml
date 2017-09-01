@@ -37,4 +37,8 @@ configuration MedicalGateway {
 	instance mg : MedicalGateway
 	
 	connector mg.Device over Serial
+	
+	//DIVERSIFICATION 3 "Test"
+		@code "2"
+	//DIVERSIFICATION @code "17"
 }
