@@ -2,6 +2,7 @@ import static java.lang.System.err
 
 def inputFiles = ["medical-cloud/medical-cloud.thingml", "medical-gateway/medical-gateway.thingml", "medical-device/medical-device.thingml"]
 def filesToDiversify = ["medical-gateway.thingml", "medical-device.thingml"]
+def filesToCopy = ["medical-cloud.thingml"]
 def outDir = new File("diverseiot-gen")
 
 // Clear output directory
@@ -139,8 +140,9 @@ println("Found ${diversity.size()} diversification points:")
 def prodResult = 1
 for (e in diversity) {
   def alternatives = e.value.files[0].variations[0].alternatives.size
+  def fileNames = e.value.files.collect({ f -> f.file.name }).join(', ')
   prodResult *= alternatives
-  println(" ${e.key}. \"${e.value.description}\" with ${alternatives} alternatives")
+  println(" ${e.key}. \"${e.value.description}\" with ${alternatives} alternatives in: ${fileNames}")
 }
 println("Resulting in a total of ${prodResult} possible configurations")
 
@@ -169,6 +171,30 @@ def buildCombinations(list) {
 }
 def allCombinations = buildCombinations(diversity.entrySet().asList().reverse())
 
+// Target language selection
+def addLanguageToDockerfile(docker, source) {
+  def language = "java" // Default to Java
+  for (line in source.readLines()) {
+    if (line.trim().startsWith("//LANGUAGE")) {
+      language = line.trim().substring(10).trim()
+    }
+  }
+
+  // Add call to generate target code
+  docker << "RUN java -jar /root/thingmlcli.jar --compiler ${language} --source /root/thingml/${source.name} --output /root/target/\n"
+
+  // Add call to run target build
+  switch (language) {
+    case "java":
+      docker << "RUN mvn --file /root/target/ install\n"
+      break
+    case "posix":
+    case "posixmt":
+      docker << "RUN make --directory=/root/target/\n"
+      break
+  }
+}
+
 // Generate the diversified source code
 def allFiles = diversity.collect({ e -> e.value.files }).flatten().collect({ f -> f.file }).unique()
 def divDir = new File(outDir, "diversified")
@@ -176,4 +202,67 @@ for (combination in allCombinations) {
   def name = combination.values().asList().join("-")
   def combDir = new File(divDir, name)
   combDir.mkdirs()
+
+  for (file in allFiles) {
+    lines = file.readLines()
+    def replacements = [:]
+    
+    // Find the parts to replace
+    for (e in diversity) {
+      self = e.value.files.find({ it.file == file })
+      if (self != null) {
+        for (v in self.variations) {
+	  replacements[v.start-1] = v.alternatives[combination[e.key]]
+	  v.start.upto(v.end-1,{ i -> replacements[i] = true })
+	}
+      }
+    }
+
+    // Create output file
+    def replacedFile = new File(combDir, file.name)
+    replacedFile.createNewFile()
+
+    // Write the lines with replacements to the new file
+    lines.eachWithIndex({ line, i ->
+      if (i in replacements) {
+        if (replacements[i] == true) {} // Skip this line
+	else {
+	  def replacement = replacements[i]
+	  // Find number of leading whitespace from the default option (next line)
+	  def defaultValue = lines[i+1]
+	  def m = defaultValue =~ /\S/
+	  m.find()
+	  // Write new line
+	  replacedFile << defaultValue.substring(0,m.start())+replacement + "\n"
+	}
+      } else {
+	// Write original line
+	replacedFile << line + "\n"
+      }
+    })
+
+    // Make a Dockerfile for each component
+    def dockerName = "Dockerfile."+file.name.replaceFirst("[.][^.]+\$", "")
+    def dockerFile = new File(combDir, dockerName)
+    dockerFile.createNewFile()
+    dockerFile << "FROM diverseiot/base\n\n"
+    dockerFile << "COPY ${file.name} /root/thingml/\n"
+    addLanguageToDockerfile(dockerFile, replacedFile)
+  }
+}
+
+// Generate the non-diversified source code
+for (fileToCopy in filesToCopy) {
+  def inFile = new File(flatDir, fileToCopy)
+  def outFile = new File(divDir, fileToCopy)
+  outFile.createNewFile()
+  outFile.text = inFile.text
+
+  // Dockerfile
+  def dockerName = "Dockerfile."+outFile.name.replaceFirst("[.][^.]+\$", "")
+  def dockerFile = new File(divDir, dockerName)
+  dockerFile.createNewFile()
+  dockerFile << "FROM diverseiot/base\n\n"
+  dockerFile << "COPY ${outFile.name} /root/thingml/\n"
+  addLanguageToDockerfile(dockerFile, outFile)
 }

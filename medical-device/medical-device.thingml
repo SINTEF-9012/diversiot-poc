@@ -5,11 +5,11 @@ thing MedicalDevice includes MedicalMsgs {
 		receives Request
 		sends Response
 	}
-	
+
 	statechart init Idle {
 		state Idle {
 			on entry print "Device ready!\n"
-			
+
 			internal event r:Gateway?Request action do
 				print "Received request "
 				print r.Num
@@ -24,6 +24,8 @@ protocol Serial @serializer "binary" @serial_path_to_device "/dev/serial1";
 
 configuration MedicalDevice {
 	instance md : MedicalDevice
-	
+
 	connector md.Gateway over Serial
 }
+
+//LANGUAGE posix

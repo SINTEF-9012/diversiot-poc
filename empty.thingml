@@ -1,0 +1,11 @@
+thing Hello {
+  statechart init World {
+    state World {
+      on entry print "ThingML program successfully compiled\n"
+    }
+  }
+}
+
+configuration Empty {
+  instance h : Hello
+}

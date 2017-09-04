@@ -5,13 +5,13 @@ thing MedicalGateway includes MedicalMsgs {
 		sends Request
 		receives Response
 	}
-	
+
 	property RNum : Byte = 0
-	
+
 	statechart init Idle {
 		composite state Idle init Poll {
 			on entry print "Device ready!\n"
-			
+
 			state Poll {
 				on entry do
 					print "Sending request "
@@ -19,13 +19,13 @@ thing MedicalGateway includes MedicalMsgs {
 					print "\n"
 					Device!Request(RNum)
 				end
-				
+
 				transition -> Poll event r:Device?Response action do
 					print "Receveived response "
 					print r.Num
 					print "\n"
 					RNum = RNum + 1
-				end 
+				end
 			}
 		}
 	}
@@ -35,10 +35,12 @@ protocol Serial @serializer "binary" @serial_path_to_device "/dev/serial1" @port
 
 configuration MedicalGateway {
 	instance mg : MedicalGateway
-	
+
 	connector mg.Device over Serial
-	
+
 	//DIVERSIFICATION 3 "Test"
 		@code "2"
 	//DIVERSIFICATION @code "17"
 }
+
+//LANGUAGE java
