@@ -1,46 +1,74 @@
 import "../messages.thingml"
 
-thing MedicalGateway includes MedicalMsgs {
+thing MedicalGateway includes GatewayDeviceMsgs, CloudGatewayMsgs {
 	required port Device {
-		sends Request
-		receives Response
+		receives GWAnnounce
 	}
-
-	property RNum : Byte = 0
+	required port Cloud {
+		//DIVERSIFICATION 1 "GW->Cloud announcement type"
+			sends CLAnnounce1
+		//DIVERSIFICATION sends CLAnnounce2
+		//-DIVERSIFICATION sends CLAnnounce3
+		//-DIVERSIFICATION sends CLAnnounce4
+		
+		//DIVERSIFICATION 2 "GW<-Cloud request type"
+			receives CLRequest1
+		//DIVERSIFICATION receives CLRequest2
+		//-DIVERSIFICATION receives CLRequest3
+		//-DIVERSIFICATION receives CLRequest4
+		
+		//DIVERSIFICATION 3 "GW->Cloud response type"
+			sends CLResponse1
+		//DIVERSIFICATION sends CLResponse2
+		//-DIVERSIFICATION sends CLResponse3
+		//-DIVERSIFICATION sends CLResponse4
+	}
+	
+	readonly property ReqType : Byte =
+		//DIVERSIFICATION 2 ""
+			1
+		//DIVERSIFICATION 2
+		//-DIVERSIFICATION 3
+		//-DIVERSIFICATION 4
+	
+	property DeviceId : Short = -1
 
 	statechart init Idle {
-		composite state Idle init Poll {
-			on entry print "Device ready!\n"
-
-			state Poll {
-				on entry do
-					print "Sending request "
-					print RNum
-					print "\n"
-					Device!Request(RNum)
-				end
-
-				transition -> Poll event r:Device?Response action do
-					print "Receveived response "
-					print r.Num
-					print "\n"
-					RNum = RNum + 1
-				end
-			}
+		state Idle {
+			internal event m:Device?GWAnnounce action do
+				DeviceId = m.Id as Short
+				//DIVERSIFICATION 1 ""
+					Cloud!CLAnnounce1(m.Id, ReqType)
+				//DIVERSIFICATION Cloud!CLAnnounce2(-m.Id, ReqType)
+				//-DIVERSIFICATION Cloud!CLAnnounce3(ReqType, m.Id)
+				//-DIVERSIFICATION Cloud!CLAnnounce4(ReqType, -m.Id)
+			end
+			
+			internal event
+			//DIVERSIFICATION 2 ""
+				r:Cloud?CLRequest1 guard ((r.PId as Short) == DeviceId)
+			//DIVERSIFICATION r:Cloud?CLRequest2 guard ((-r.NId as Short) == DeviceId)
+			//-DIVERSIFICATION r:Cloud?CLRequest3 guard ((r.PId as Short) == DeviceId)
+			//-DIVERSIFICATION r:Cloud?CLRequest4 guard ((-r.NId as Short) == DeviceId)
+			action do
+				//DIVERSIFICATION 3 ""
+					Cloud!CLResponse1(80, DeviceId)
+				//DIVERSIFICATION Cloud!CLResponse2(80, DeviceId)
+				//-DIVERSIFICATION Cloud!CLResponse3(80, DeviceId)
+				//-DIVERSIFICATION Cloud!CLResponse4(80, DeviceId)
+			end
 		}
 	}
 }
 
 protocol Serial @serializer "binary" @serial_path_to_device "/dev/serial1" @port "/dev/serial1" @baudrate "115200";
+protocol MQTT @serializer "JSON" @mqtt_broker_address "logger" @mqtt_client_id "Hello World";
 
 configuration MedicalGateway {
 	instance mg : MedicalGateway
 
 	connector mg.Device over Serial
-
-	//DIVERSIFICATION 3 "Test"
-		@code "2"
-	//DIVERSIFICATION @code "17"
+	connector mg.Cloud over MQTT
 }
 
 //LANGUAGE java

@@ -1,0 +1,46 @@
+import "../messages.thingml"
+
+thing MedicalCloud includes CloudGatewayMsgs {
+	required port Gateway {
+		receives CLAnnounce1, CLAnnounce2, CLAnnounce3, CLAnnounce4
+		sends CLRequest1, CLRequest2, CLRequest3, CLRequest4
+		receives CLResponse1, CLResponse2, CLResponse3, CLResponse4
+	}
+	
+	
+	readonly property MaxDevices : Short = 200
+	property NumDevices : Short = 0
+	property DeviceIds : Short[MaxDevices]
+	property DeviceReqs : Byte[MaxDevices]
+	
+	
+	function AddDevice(Id : Short, ReqType : Byte) do
+		DeviceIds[NumDevices] = Id
+		DeviceReqs[NumDevices] = ReqType
+		NumDevices = NumDevices+1
+	end	
+
+	statechart init Idle {
+		state Idle {
+			internal event m:Gateway?CLAnnounce1 action AddDevice( m.PId, m.ReqType)
+			internal event m:Gateway?CLAnnounce2 action AddDevice(-m.NId, m.ReqType)
+			internal event m:Gateway?CLAnnounce3 action AddDevice( m.PId as Short, m.ReqType)
+			internal event m:Gateway?CLAnnounce4 action AddDevice(-m.NId as Short, m.ReqType)
+			
+			internal event m:Gateway?CLResponse1 action do print "Value: " print m.Value print "\n" end
+			internal event m:Gateway?CLResponse2 action do print "Value: " print m.Value print "\n" end
+			internal event m:Gateway?CLResponse3 action do print "Value: " print m.Value print "\n" end
+			internal event m:Gateway?CLResponse4 action do print "Value: " print m.Value print "\n" end
+		}
+	}
+}
+
+protocol MQTT @serializer "JSON" @mqtt_broker_address "logger";
+
+configuration MedicalCloud {
+	instance mc : MedicalCloud
+
+	connector mc.Gateway over MQTT
+}
+
+//LANGUAGE java

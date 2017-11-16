@@ -1,11 +1,21 @@
 thing Hello {
+  message Msg()
+  required port Port { sends Msg receives Msg }
+
   statechart init World {
     state World {
       on entry print "ThingML program successfully compiled\n"
+      on exit Port!Msg()
+      internal event Port?Msg
     }
   }
 }
 
+protocol Serial @serializer "binary";
+protocol MQTT @serializer "JSON";
+
 configuration Empty {
   instance h : Hello
+  connector h.Port over Serial
+  connector h.Port over MQTT
 }

@@ -37,7 +37,7 @@ def findDiversificationPoints(flat) {
   def reader = new FileReader(flat)
   def lineNo = 0
   def points = [:]
-  
+
   while (true) {
     def line = null;
     lineNo++
@@ -60,13 +60,13 @@ def findDiversificationPoints(flat) {
 	lineNo++
 	if (line != null)
 	  options << line.trim()
-	
+
 	// Alternative source codes
 	while ((line = reader.readLine()) != null && line.trim().startsWith("//DIVERSIFICATION")) {
 	  options << line.trim().substring(17).trim()
 	  lineNo++
-        }
-	
+    }
+
 	// Add it to the set of found diversifications
 	if (!(id in points)) points[id] = [description: null, variations:[]]
 	def point = points[id]
@@ -86,9 +86,11 @@ def findDiversificationPoints(flat) {
 
 def foundError = false
 def diversity = [:]
+def allFiles = []
 for (fileToDiversify in filesToDiversify) {
   def file = new File(flatDir, fileToDiversify)
   def diversificationPoints = findDiversificationPoints(file)
+  allFiles << file
 
   for (e in diversificationPoints) {
     // Check that each of the variations of the diversification points is the same length
@@ -97,12 +99,12 @@ for (fileToDiversify in filesToDiversify) {
       def firstVar = variations[0]
       for (var in variations.tail()) {
         if (var.alternatives.size != firstVar.alternatives.size) {
-	  err.print("ERROR - in file ${fileToDiversify}: ")
-	  err.print("Diversification ${e.key} \"${e.value.description}\" first defined in lines ${firstVar.start}-${firstVar.end} ")
-	  err.print("has ${firstVar.alternatives.size} alternatives, ")
-	  err.println("but ${var.alternatives.size} alternatives in lines ${var.start}-${var.end}")
-	  foundError = true
-	}
+      	  err.print("ERROR - in file ${fileToDiversify}: ")
+      	  err.print("Diversification ${e.key} \"${e.value.description}\" first defined in lines ${firstVar.start}-${firstVar.end} ")
+      	  err.print("has ${firstVar.alternatives.size} alternatives, ")
+      	  err.println("but ${var.alternatives.size} alternatives in lines ${var.start}-${var.end}")
+      	  foundError = true
+      	}
       }
     }
 
@@ -119,9 +121,9 @@ for (e in diversity) {
     for (file in e.value.files.tail()) {
       if (firstFile.variations[0].alternatives.size != file.variations[0].alternatives.size) {
         err.print("ERROR - in file ${file.file.name}: ")
-	err.print("Diversification ${e.key} \"${e.value.description}\" first defined in file ${firstFile.file.name} ")
-	err.print("has ${firstFile.variations[0].alternatives.size} alternatives, ")
-	err.println("but ${file.variations[0].alternatives.size} alternatives in this file")
+      	err.print("Diversification ${e.key} \"${e.value.description}\" first defined in file ${firstFile.file.name} ")
+      	err.print("has ${firstFile.variations[0].alternatives.size} alternatives, ")
+      	err.println("but ${file.variations[0].alternatives.size} alternatives in this file")
 
         foundError = true
       }
@@ -153,7 +155,7 @@ def buildCombinations(list) {
     return []
   } else {
     def result = []
-    0.upto(list[0].value.files[0].variations[0].alternatives.size-1, { i -> 
+    0.upto(list[0].value.files[0].variations[0].alternatives.size-1, { i ->
       def subList = buildCombinations(list.tail())
       if (subList.size == 0) {
         def ent = [:]
@@ -174,9 +176,12 @@ def allCombinations = buildCombinations(diversity.entrySet().asList().reverse())
 // Target language selection
 def addLanguageToDockerfile(docker, source) {
   def language = "java" // Default to Java
+  def configurationName = ""
   for (line in source.readLines()) {
     if (line.trim().startsWith("//LANGUAGE")) {
       language = line.trim().substring(10).trim()
+    } else if (line.trim().startsWith("configuration")) {
+      configurationName = line.trim().substring(13).replace("{","").trim()
     }
   }
 
@@ -187,16 +192,25 @@ def addLanguageToDockerfile(docker, source) {
   switch (language) {
     case "java":
       docker << "RUN mvn --file /root/target/ install\n"
+      //docker << "ENV THINGML_CMD=\"mvn --file /root/target/ exec:java\"\n"
+      docker << "ENV THINGML_CMD=\"java -jar /root/target/target/${configurationName}-1.0.0-jar-with-dependencies.jar\"\n"
       break
     case "posix":
     case "posixmt":
       docker << "RUN make --directory=/root/target/\n"
+      docker << "ENV THINGML_CMD=\"/root/target/${configurationName}\"\n"
+      break
+    case "nodejs":
+    case "nodejsmt":
+      docker << "RUN npm link state.js\n"
+      docker << "RUN npm link serialport\n"
+      docker << "RUN npm link bytebuffer\n"
+      docker << "ENV THINGML_CMD=\"node /root/target/main.js\"\n"
       break
   }
 }
 
 // Generate the diversified source code
-def allFiles = diversity.collect({ e -> e.value.files }).flatten().collect({ f -> f.file }).unique()
 def divDir = new File(outDir, "diversified")
 for (combination in allCombinations) {
   def name = combination.values().asList().join("-")
@@ -206,15 +220,15 @@ for (combination in allCombinations) {
   for (file in allFiles) {
     lines = file.readLines()
     def replacements = [:]
-    
+
     // Find the parts to replace
     for (e in diversity) {
       self = e.value.files.find({ it.file == file })
       if (self != null) {
         for (v in self.variations) {
-	  replacements[v.start-1] = v.alternatives[combination[e.key]]
-	  v.start.upto(v.end-1,{ i -> replacements[i] = true })
-	}
+      	  replacements[v.start-1] = v.alternatives[combination[e.key]]
+      	  v.start.upto(v.end-1,{ i -> replacements[i] = true })
+      	}
       }
     }
 

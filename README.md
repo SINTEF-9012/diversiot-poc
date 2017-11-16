@@ -29,3 +29,8 @@ Each point above comes in two alternative, yielding 16 variants of the distribut
 - Define an entropy metric
 - Automate the generation of variants
 - How to ensure interoperability, correctness, etc in presence of high entropy? Or, put it simple, how do we keep control over this apparent mess? E.g. how to generate a proper backend part, based on the footprint of the gateway?
+
+
+# To run
+Helpful command to clean up all generated images:
+docker images --format "{{.Repository}}:{{.Tag}}" | grep diverseiot/ | grep -v latest | xargs docker rmi

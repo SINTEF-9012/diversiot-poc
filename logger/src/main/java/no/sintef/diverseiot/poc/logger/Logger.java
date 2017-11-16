@@ -1,11 +1,8 @@
 package no.sintef.diverseiot.poc.logger;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
-/**
- * Hello world!
- *
- */
 public class Logger 
 {
     public static void main( String[] args ) throws IOException, InterruptedException
@@ -16,10 +13,13 @@ public class Logger
     		new Mqtt(1883,8080),
     	};
     	
-    	// Start all the handlers
-    	for (Handler handler : handlers)
-    		handler.start();
+    	// Open a file to start logging
+    	PrintStream output = new PrintStream("/root/output.log");
+    	Handler.setLogOutput(output);
     	
+    	// Start all the handlers
+    	for (Handler handler : handlers) 
+    		handler.start();
     	
     	// Handle everything forever
     	while(true) {

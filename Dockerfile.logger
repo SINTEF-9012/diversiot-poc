@@ -5,7 +5,9 @@ RUN apt-get update
 RUN apt-get -y install default-jdk
 RUN apt-get -y install maven
 
+ENV MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true"
+
 COPY logger/ /root/logger/
 RUN mvn --file /root/logger/ clean install
 
-CMD mvn --file /root/logger/ exec:java
+CMD java -jar /root/logger/target/logger-0.0.1-SNAPSHOT-jar-with-dependencies.jar

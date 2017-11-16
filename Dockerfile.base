@@ -1,12 +1,18 @@
 FROM ubuntu:16.04
 
 RUN apt-get update
+
 # To build posix
 RUN apt-get -y install build-essential
 
 # To build java
 RUN apt-get -y install default-jdk
 RUN apt-get -y install maven
+
+# To build nodejs
+RUN apt-get -y install curl
+RUN curl -sL http://deb.nodesource.com/setup_6.x | bash -
+RUN apt-get install -y nodejs
 
 # Nice tool to make fake serial ports
 RUN apt-get -y install socat
@@ -17,6 +23,13 @@ ADD http://thingml.org/dist/ThingML2CLI.jar /root/thingmlcli.jar
 # Prepare Maven by downloading some dependencies so we don't need to do it later
 COPY empty.thingml /root/empty.thingml
 RUN java -jar /root/thingmlcli.jar --compiler java --source /root/empty.thingml --output /root/empty/
+ENV MAVEN_OPTS="-Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true"
 RUN mvn --file /root/empty/ clean install
+
+# Install some nodejs dependencies globally, so that it's a bit quicker later
+RUN npm config set strict-ssl false
+RUN npm install -g state.js@^5.11.0
+RUN npm install -g serialport@^3.1.2
+RUN npm install -g bytebuffer@^5.0.1
 
 CMD /bin/bash

@@ -1,3 +1,18 @@
 
 datatype Byte<1> @type_checker "Integer"
-	@c_type "uint8_t"	@java_type "byte";
+	@c_type "int8_t" @java_type "byte";
+	
+datatype Short<2> @type_checker "Integer"
+	@c_type "int16_t" @java_type "short";
+
+datatype Int<4> @type_checker "Integer"
+	@c_type "int32_t" @java_type "int";
+	
+datatype Long<8> @type_checker "Integer"
+	@c_type "int64_t" @java_type "long";
+	
+datatype Float<4> @type_checker "Real"
+	@c_type "float" @java_type "float";
+
+datatype Double<8> @type_checker "Real"
+	@c_type "double" @java_type "double";

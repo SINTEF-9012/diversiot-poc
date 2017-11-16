@@ -1,18 +1,30 @@
 import "datatypes.thingml"
 
-thing fragment MedicalMsgs {
-	message Request(Num : Byte)
-	//DIVERSIFICATION 1 "Request code"
-		@code "1"
-	//DIVERSIFICATION @code "10"
-	
-	//DIVERSIFICATION 1 "Request test"
-		// Hello
-	//DIVERSIFICATION // Jakob
 
-		
-	message Response(Num : Byte)
-	//DIVERSIFICATION 2 "Response code"
-		@code "2"
-	//DIVERSIFICATION @code "17"
+thing fragment CloudGatewayMsgs {
+	message CLAnnounce1(PId : Int, ReqType : Byte) @code "10"
+	message CLAnnounce2(NId : Long, ReqType : Byte) @code "11"
+	message CLAnnounce3(ReqType : Byte, PId : Float) @code "12"
+	message CLAnnounce4(ReqType : Byte, NId : Double) @code "13"
+	
+	message CLRequest1(PId : Short) @code "20"
+	message CLRequest2(NId : Int) @code "21"
+	message CLRequest3(PId : Long) @code "22"
+	message CLRequest4(NId : Float) @code "23"
+	
+	message CLResponse1(Value : Double, PId : Double) @code "30"
+	message CLResponse2(Value : Float, PId : Float) @code "31"
+	message CLResponse3(Value : Long, PId : Long) @code "32"
+	message CLResponse4(Value : Int, PId : Int) @code "33"
 }
+
+
+
+
+thing fragment GatewayDeviceMsgs {
+	message GWAnnounce(Id : Short)
+		@code "100"
+		
+	
+}
+

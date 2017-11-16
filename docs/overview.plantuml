@@ -1,0 +1,25 @@
+@startuml
+
+cloud Cloud
+
+node Gateway1
+node Device1
+
+node Gateway2
+node Device2
+
+node GatewayN
+node DeviceN
+
+
+Cloud == Gateway1
+Cloud == Gateway2
+Cloud == GatewayN
+
+Gateway1 == Device1
+Gateway2 == Device2
+GatewayN == DeviceN
+
+Gateway2 . GatewayN
+
+@enduml

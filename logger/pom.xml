@@ -44,20 +44,41 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.6.0</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
         <executions>
           <execution>
+            <id>create-my-bundle</id>
+            <phase>package</phase>
             <goals>
-              <goal>java</goal>
+              <goal>single</goal>
             </goals>
+            <configuration>
+              <descriptorRefs>
+                <descriptorRef>jar-with-dependencies</descriptorRef>
+              </descriptorRefs>
+              <archive>
+                <manifest>
+                  <mainClass>no.sintef.diverseiot.poc.logger.Logger</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
           </execution>
         </executions>
-        <configuration>
-          <mainClass>no.sintef.diverseiot.poc.logger.Logger</mainClass>
-        </configuration>
       </plugin>
+  <!--     
+      <plugin>
+      	<groupId>org.apache.maven.plugins</groupId>
+      	<artifactId>maven-jar-plugin</artifactId>
+      	<version>3.0.2</version>
+      	<configuration>
+      		<archive>
+      			<manifest>
+      				<mainClass>no.sintef.diverseiot.poc.logger.Logger</mainClass>
+      			</manifest>
+      		</archive>
+      	</configuration>
+      </plugin> -->
     </plugins>
   </build>
 </project>
