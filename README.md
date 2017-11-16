@@ -1,5 +1,5 @@
-# diverseiot-poc
-Proof-of-concept demonstrator for DiverseIoT Phase 1
+# diversiot-poc
+Proof-of-concept demonstrator for DiversIoT Phase 1
 
 ## Architecture
 
